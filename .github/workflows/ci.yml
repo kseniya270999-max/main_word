@@ -20,7 +20,7 @@ jobs:
 
       - name: Build program
         run: |
-          gcc -O2 -Wall -Wextra -o main_word main-word.c
+          gcc -O2 -Wall -Wextra -o main_word src/main-word.c
           mkdir -p usr/bin
           cp main_word usr/bin/main_word
 
