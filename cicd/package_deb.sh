@@ -6,10 +6,11 @@ BINNAME="main_word"  # имя бинаря
 ARCH="amd64"         # для раннера 
 SECTION="utils"
 PRIORITY="optional"
-MAINTAINER="Studentka Xenium <zo71205@voenmeh.ru>"
+MAINTAINER="Studentka Xenium <zo71105@voenmeh.ru>"
 DEPENDS="libc6"
 
-VERSION="${GITHUB_REF_NAME:-0.0.0}-${GITHUB_SHA:0:8}"
+SHA="${GITHUB_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo local)}"
+VERSION="${GITHUB_REF_NAME:-0.1.0}-${SHA}"
 
 ROOT="package"
 OUTDIR="dist"

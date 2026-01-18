@@ -1,3 +1,7 @@
 # Ignore all trash files
 *.o
 main_word
+
+# Ignore build folders
+dist/
+package/
