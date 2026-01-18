@@ -1,0 +1,81 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+jobs:
+  build_test_package:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential dpkg-dev
+
+      - name: Build
+        run: |
+          gcc -O2 -Wall -Wextra -o main_word main-word.c
+          mkdir -p usr/bin
+          cp -v main_word usr/bin/main_word
+
+      - name: Test
+        run: |
+          set -e
+          BIN="./usr/bin/main_word"
+
+          run_test () {
+            name="$1"
+            input="$2"
+            expected="$3"
+            out="$(printf "%s\n" "$input" | "$BIN" | tr -d '\r')"
+            echo "$out" | grep -qE "$expected"
+            echo "PASS: $name"
+          }
+
+          run_test "empty" "" "Number of words in string = 0"
+          run_test "one word" "hello" "Number of words in string = 1"
+          run_test "two words" "hello world" "Number of words in string = 2"
+          run_test "many spaces" "  hello   world  " "Number of words in string = 2"
+          run_test "tabs" $'hello\tworld test' "Number of words in string = 3"
+
+      - name: Package deb
+        run: |
+          set -e
+          NAME="main-word"
+          BINNAME="main_word"
+          ARCH="amd64"
+          VERSION="0.1.0-${GITHUB_SHA:0:8}"
+
+          rm -rf package dist
+          mkdir -p package/DEBIAN package/usr/bin dist
+          install -m 0755 "./usr/bin/${BINNAME}" "package/usr/bin/${BINNAME}"
+
+          SIZE_KB="$(du -sk package/usr | awk '{print $1}')"
+
+          cat > package/DEBIAN/control <<EOF
+          Package: ${NAME}
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: ${ARCH}
+          Depends: libc6
+          Installed-Size: ${SIZE_KB}
+          Maintainer: Student <student@example.com>
+          Description: Program that counts number of words in a string.
+          EOF
+
+          dpkg-deb --build package "dist/${NAME}_${VERSION}_${ARCH}.deb"
+
+      - name: Upload deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-package
+          path: dist/*.deb
+          if-no-files-found: error
+
