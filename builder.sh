@@ -34,6 +34,6 @@ fi
 
 echo
 echo "======================================"
-echo " Pipeline finished successfully ✔"
+echo " Pipeline finished successfully!) "
 echo "======================================"
 
